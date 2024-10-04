@@ -1,33 +1,51 @@
 import random
 import csv
 import os
+import hashlib
+
 
 class Main_Options:
     def create_account(self):
         amount = 0
         acnt_no = random.randint(10000,30000)
         user_name = input("Enter your name: ")
-
+        pin = self.generate_pin()
+        print("Please contact your bank for getting pin... ")
         try:
             file_exists = os.path.isfile('user_details.csv')
             print(f"File exists: {file_exists}. Writing to CSV...")
             with open('user_details.csv','a',newline='') as file:
                 content = csv.writer(file)
                 if not file_exists:
-                    content.writerow(["Account Number","User Name"])
-                content.writerow([acnt_no,user_name,amount])
+                    content.writerow(["Account Number", "User  Name", "PIN", "Balance"])
+                content.writerow([acnt_no,user_name,amount,pin])
             print(f"Account created successfully, Your Account Number: {acnt_no}")
         except (IOError, csv.Error) as e:  # Catch specific exceptions related to file operations and CSV writing
             print(f"Error writing to CSV file: {e}")
+    
+    def check_balance(self, acnt_no):
+        try:
+            with open('user_details.csv', 'r', newline='') as file:
+                csvreader = list(csv.reader(file))
+                for i in csvreader:
+                    if i[0] == str(acnt_no):
+                        print(f"Your current balance is: {i[2]}")
+                        break
+        except Exception as e:
+            print(e)
+    def generate_pin(self):
+        pin = input("Enter your pin.. Don't forget it..")
+        return pin
 
     def login(self):
         
         user_ac_no  = int(input("enter your account number: "))
+        user_pin = input("Enter your PIN: ")
         try:
             with open('user_details.csv','r',newline='') as file:
                 csvreader = csv.reader(file)
                 for i in csvreader:
-                    if i[0] == str(user_ac_no):
+                    if i[0] == str(user_ac_no) and i[3] == hashlib.sha256(user_pin.encode()):
                         name = i[1]
                         print(f"Welcome {name.upper()}")
                         break
@@ -84,7 +102,7 @@ class BankingSystem:
                 main_option.create_account()
             elif option == 2:
                 main_option.login()
-            elif option ==3:
+            elif option == 3:
                 exit()
         except Exception as e:
             print(e)
@@ -93,7 +111,8 @@ class BankingSystem:
     def display_menu_second(self,user_ac_no):
         print("1. Deposit")
         print("2. Withdraw")
-        print("3. Exit")
+        print("3. Check Balance")
+        print("4. Exit")
         second_option = int(input("Enter your choice"))
         self.check_second_option(user_ac_no,second_option)
 
@@ -106,7 +125,9 @@ class BankingSystem:
             elif second_option == 2:
                 amount = int(input("enter your amount: "))
                 main_option.withdraw(acnt_no,amount)
-            elif second_option ==3:
+            elif second_option == 3:
+                main_option.check_balance(acnt_no)
+            elif second_option == 4:
                 exit()
         except Exception as e:
             print(e)
